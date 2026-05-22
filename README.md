@@ -134,3 +134,5 @@ All of these are skills used in real web development jobs.
 ## That's All!
 
 Start translating, share it with friends, or show it to your mentor. The code is clean and commented, so feel free to explore and modify.
+
+<img width="1066" height="806" alt="image" src="https://github.com/user-attachments/assets/7218067b-4854-46e4-8053-71bbf173f7ae" />
