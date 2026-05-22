@@ -134,5 +134,3 @@ All of these are skills used in real web development jobs.
 ## That's All!
 
 Start translating, share it with friends, or show it to your mentor. The code is clean and commented, so feel free to explore and modify.
-
-Happy translating! 🌍
