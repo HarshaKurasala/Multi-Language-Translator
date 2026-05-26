@@ -58,7 +58,7 @@ WorldSpeakAI/
 
 ---
 
-*Made with ❤️ for language learners and global communicators.*
+*Made for language learners and global communicators.*
 *Part of the CodeAlpha Internship Projects.*
 
 <img width="1272" height="843" alt="image" src="https://github.com/user-attachments/assets/9db4eea8-0947-43ae-8181-a82a40674d06" />
