@@ -17,8 +17,10 @@ const translateBtn = document.getElementById('translateBtn');
 const copyBtn = document.getElementById('copyBtn');
 const listenBtn = document.getElementById('listenBtn');
 const listenInputBtn = document.getElementById('listenInputBtn');
+const voiceInputBtn = document.getElementById('voiceInputBtn');
 const clearInputBtn = document.getElementById('clearInputBtn');
 const clearOutputBtn = document.getElementById('clearOutputBtn');
+const swapBtn = document.getElementById('swapBtn');
 const statusDiv = document.getElementById('status');
 const inputCount = document.getElementById('inputCount');
 const outputCount = document.getElementById('outputCount');
@@ -34,17 +36,48 @@ translateBtn.addEventListener('click', async () => {
 
     // Validation
     if (!inputText) {
-        showStatus('❌ Please enter text to translate', 'error');
+        showStatus('Please enter text', 'error');
         return;
     }
 
     if (sourceLanguage !== 'auto' && sourceLanguage === targetLanguage) {
-        showStatus('❌ Source and target languages must be different', 'error');
+        showStatus('Languages must be different', 'error');
         return;
     }
 
     // Perform translation
     await performTranslation(inputText, sourceLanguage, targetLanguage);
+});
+
+// Swap languages functionality
+swapBtn.addEventListener('click', () => {
+    const sourceVal = sourceLanguageSelect.value;
+    const targetVal = targetLanguageSelect.value;
+    
+    if (sourceVal === 'auto') {
+        showToast('Cannot swap with Auto-Detect');
+        return;
+    }
+
+    sourceLanguageSelect.value = targetVal;
+    targetLanguageSelect.value = sourceVal;
+    
+    // Also swap text if available
+    const inputVal = inputTextArea.value;
+    const outputVal = outputTextArea.value;
+    
+    if (outputVal) {
+        inputTextArea.value = outputVal;
+        outputTextArea.value = inputVal;
+        inputCount.textContent = inputTextArea.value.length;
+        outputCount.textContent = outputTextArea.value.length;
+    }
+
+    // Trigger animation
+    swapBtn.style.transform = 'rotate(180deg)';
+    setTimeout(() => {
+        swapBtn.style.transform = '';
+    }, 200);
 });
 
 // Copy button - Individual copy for output
@@ -54,7 +87,7 @@ copyBtn.addEventListener('click', async () => {
         if (!text) return;
 
         await navigator.clipboard.writeText(text);
-        showToast('✅ Text copied to clipboard!');
+        showToast('Text copied to clipboard');
     } catch (err) {
         fallbackCopyToClipboard(outputTextArea.value);
     }
@@ -64,7 +97,7 @@ copyBtn.addEventListener('click', async () => {
 listenBtn.addEventListener('click', () => {
     const text = outputTextArea.value;
     if (!text) {
-        showToast('❌ No text to listen to');
+        showToast('No text to listen to');
         return;
     }
 
@@ -92,6 +125,10 @@ listenBtn.addEventListener('click', () => {
         'hi': 'hi-IN',
         'ko': 'ko-KR',
         'bn': 'bn-IN',
+        'te': 'te-IN',
+        'mr': 'mr-IN',
+        'ta': 'ta-IN',
+        'gu': 'gu-IN',
         'th': 'th-TH',
         'tr': 'tr-TR'
     };
@@ -104,20 +141,17 @@ listenBtn.addEventListener('click', () => {
     // Event listeners for speech synthesis
     utterance.onstart = () => {
         listenBtn.disabled = true;
-        listenBtn.textContent = '🔉 Playing...';
-        showToast('🔊 Playing translated audio...');
+        showToast('Playing audio...');
     };
 
     utterance.onend = () => {
         listenBtn.disabled = false;
-        listenBtn.textContent = '🔊';
     };
 
     utterance.onerror = (event) => {
         console.error('Speech error:', event);
         listenBtn.disabled = false;
-        listenBtn.textContent = '🔊';
-        showToast('❌ Text-to-Speech unavailable');
+        showToast('Text-to-Speech unavailable');
     };
 
     // Start speaking
@@ -128,7 +162,7 @@ listenBtn.addEventListener('click', () => {
 listenInputBtn.addEventListener('click', () => {
     const text = inputTextArea.value;
     if (!text) {
-        showToast('❌ No input text to listen to');
+        showToast('No input text to listen to');
         return;
     }
 
@@ -156,6 +190,10 @@ listenInputBtn.addEventListener('click', () => {
         'hi': 'hi-IN',
         'ko': 'ko-KR',
         'bn': 'bn-IN',
+        'te': 'te-IN',
+        'mr': 'mr-IN',
+        'ta': 'ta-IN',
+        'gu': 'gu-IN',
         'th': 'th-TH',
         'tr': 'tr-TR'
     };
@@ -168,20 +206,17 @@ listenInputBtn.addEventListener('click', () => {
     // Event listeners for speech synthesis
     utterance.onstart = () => {
         listenInputBtn.disabled = true;
-        listenInputBtn.textContent = '🔉 Playing...';
-        showToast('🔊 Playing input audio...');
+        showToast('Playing input audio...');
     };
 
     utterance.onend = () => {
         listenInputBtn.disabled = false;
-        listenInputBtn.textContent = '🔊';
     };
 
     utterance.onerror = (event) => {
         console.error('Speech error:', event);
         listenInputBtn.disabled = false;
-        listenInputBtn.textContent = '🔊';
-        showToast('❌ Text-to-Speech unavailable');
+        showToast('Text-to-Speech unavailable');
     };
 
     // Start speaking
@@ -193,7 +228,7 @@ clearInputBtn.addEventListener('click', () => {
     inputTextArea.value = '';
     inputCount.textContent = '0';
     statusDiv.innerHTML = '';
-    statusDiv.className = 'status';
+    statusDiv.className = 'status-indicator';
     window.speechSynthesis.cancel();
 });
 
@@ -209,10 +244,7 @@ clearOutputBtn.addEventListener('click', () => {
 // Character count tracking
 inputTextArea.addEventListener('input', () => {
     inputCount.textContent = inputTextArea.value.length;
-});
-
-outputTextArea.addEventListener('input', () => {
-    outputCount.textContent = outputTextArea.value.length;
+    listenInputBtn.disabled = inputTextArea.value.length === 0;
 });
 
 // ============================================
@@ -224,44 +256,32 @@ outputTextArea.addEventListener('input', () => {
  */
 async function performTranslation(text, sourceLang, targetLang) {
     try {
-        showStatus('⏳ Translating...', 'loading');
+        showStatus('Translating...', 'loading');
         translateBtn.disabled = true;
 
         let translatedText = null;
-        let lastError = null;
 
-        // Try API 1: MyMemory (Most Reliable Free API)
+        // Try API 1: MyMemory
         try {
-            console.log('Trying MyMemory API...');
             translatedText = await translateUsingMyMemory(text, sourceLang, targetLang);
-            console.log('✅ MyMemory API successful');
         } catch (e) {
-            console.warn('⚠️ MyMemory failed:', e.message);
-            lastError = e;
-
+            console.warn('MyMemory failed, trying Google...');
             // Try API 2: Google Translate
             try {
-                console.log('Trying Google Translate API...');
                 translatedText = await translateUsingGoogleTranslate(text, sourceLang, targetLang);
-                console.log('✅ Google Translate API successful');
             } catch (e2) {
-                console.warn('⚠️ Google Translate failed:', e2.message);
-                lastError = e2;
-
-                // Try API 3: Alternative method
+                console.warn('Google failed, trying Alt...');
+                // Try API 3: Alternative
                 try {
-                    console.log('Trying alternative translation method...');
                     translatedText = await translateUsingAltMethod(text, sourceLang, targetLang);
-                    console.log('✅ Alternative method successful');
                 } catch (e3) {
-                    console.warn('⚠️ All methods failed');
-                    lastError = e3;
+                    throw new Error('All translation methods failed');
                 }
             }
         }
 
         if (!translatedText) {
-            throw new Error('Translation failed. Please try again.');
+            throw new Error('Translation failed');
         }
 
         // Update the output text area
@@ -273,115 +293,63 @@ async function performTranslation(text, sourceLang, targetLang) {
         listenBtn.disabled = false;
         clearOutputBtn.disabled = false;
 
-        showStatus('✅ Translation completed successfully!', 'success');
+        showStatus('Translation complete', 'success');
 
     } catch (error) {
         console.error('Translation Error:', error);
-        outputTextArea.value = '';
-        showStatus(
-            `❌ Error: ${error.message}`,
-            'error'
-        );
-        copyBtn.disabled = true;
-        listenBtn.disabled = true;
-        clearOutputBtn.disabled = true;
+        showStatus(error.message, 'error');
     } finally {
         translateBtn.disabled = false;
     }
 }
 
 /**
- * API 1: MyMemory Translation API - MOST RELIABLE
- * Free, no authentication, CORS enabled, works with 50+ languages
+ * API 1: MyMemory Translation API
  */
 async function translateUsingMyMemory(text, source, target) {
-    // MyMemory doesn't support auto-detect, default to 'en'
     const sourceCode = source === 'auto' ? 'en' : source;
-
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceCode}|${target}`;
 
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'User-Agent': 'AI-Multilingual-Translator'
-        }
-    });
-    
-    if (!response.ok) {
-        throw new Error(`MyMemory HTTP ${response.status}`);
-    }
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('MyMemory error');
 
     const data = await response.json();
-
-    if (data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
-        const translated = data.responseData.translatedText;
-        if (translated && translated.length > 0 && translated !== 'Not found (null). Translation by humans.') {
-            return translated;
-        }
+    if (data.responseStatus === 200) {
+        return data.responseData.translatedText;
     }
-
-    throw new Error('MyMemory: No translation received');
+    throw new Error('MyMemory failed');
 }
 
 /**
  * API 2: Google Translate
  */
 async function translateUsingGoogleTranslate(text, source, target) {
-    const sourceCode = source === 'auto' ? 'auto' : source;
+    const sl = source === 'auto' ? 'auto' : source;
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
 
-    try {
-        const params = new URLSearchParams({
-            client: 'gtx',
-            sl: sourceCode,
-            tl: target,
-            dt: 't',
-            q: text
-        });
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Google error');
 
-        const response = await fetch(`https://translate.googleapis.com/translate_a/single?${params}`, {
-            method: 'GET',
-            headers: {
-                'User-Agent': 'Mozilla/5.0'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Google HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        if (data && data[0] && data[0][0] && data[0][0][0]) {
-            return data[0][0][0];
-        }
-
-        throw new Error('Google: Invalid response');
-    } catch (error) {
-        throw new Error(`Google Translate failed: ${error.message}`);
+    const data = await response.json();
+    if (data && data[0] && data[0][0] && data[0][0][0]) {
+        return data[0][0][0];
     }
+    throw new Error('Google failed');
 }
 
 /**
  * API 3: Alternative Translation Method
  */
 async function translateUsingAltMethod(text, source, target) {
-    // Using a different endpoint as backup
     const sourceCode = source === 'auto' ? 'en' : source;
-
-    try {
-        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.substring(0, 500))}&langpair=${sourceCode}|${target}`;
-        
-        const altResponse = await fetch(url);
-        const altData = await altResponse.json();
-
-        if (altData.responseStatus === 200 && altData.responseData.translatedText) {
-            return altData.responseData.translatedText;
-        }
-
-        throw new Error('Alternative method failed');
-    } catch (error) {
-        throw new Error(`Alternative method: ${error.message}`);
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.substring(0, 500))}&langpair=${sourceCode}|${target}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.responseStatus === 200) {
+        return data.responseData.translatedText;
     }
+    throw new Error('Alt method failed');
 }
 
 
@@ -390,61 +358,62 @@ async function translateUsingAltMethod(text, source, target) {
 // ============================================
 
 /**
- * showStatus - Display status messages to the user
- * Supports different status types: loading, success, error
+ * showStatus - Display status messages
  */
 function showStatus(message, type) {
-    statusDiv.className = `status ${type}`;
+    statusDiv.className = `status-indicator ${type}`;
+    
+    let icon = '';
+    if (type === 'success') icon = '<i class="fas fa-check-circle"></i> ';
+    if (type === 'error') icon = '<i class="fas fa-exclamation-circle"></i> ';
     
     if (type === 'loading') {
-        statusDiv.innerHTML = `<span class="spinner"></span>${message}`;
+        statusDiv.innerHTML = message; // CSS handles spinner
     } else {
-        statusDiv.textContent = message;
+        statusDiv.innerHTML = `${icon}${message}`;
     }
 
-    // Auto-hide success and error messages after 5 seconds
     if (type !== 'loading') {
         setTimeout(() => {
-            statusDiv.className = 'status';
+            statusDiv.className = 'status-indicator';
             statusDiv.innerHTML = '';
-        }, 5000);
+        }, 3000);
     }
 }
 
 /**
- * showToast - Display temporary notification messages
- * Used for quick feedback on user actions (copy, listen, etc.)
+ * showToast - Display temporary notification
  */
 function showToast(message) {
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) existingToast.remove();
+
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.textContent = message;
     document.body.appendChild(toast);
 
-    // Remove toast after 2.5 seconds
     setTimeout(() => {
-        toast.style.animation = 'slideIn 0.3s ease-out reverse';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(1rem)';
+        toast.style.transition = 'all 0.3s ease';
         setTimeout(() => toast.remove(), 300);
     }, 2500);
 }
 
 /**
- * fallbackCopyToClipboard - Legacy copy method for older browsers
- * Used as a fallback if the modern Clipboard API is not available
+ * fallbackCopyToClipboard
  */
 function fallbackCopyToClipboard(text) {
     const textArea = document.createElement('textarea');
     textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
     document.body.appendChild(textArea);
-    textArea.focus();
     textArea.select();
     try {
         document.execCommand('copy');
-        showToast('✅ Text copied to clipboard!');
+        showToast('Copied to clipboard');
     } catch (err) {
-        showToast('❌ Could not copy text');
+        showToast('Copy failed');
     }
     document.body.removeChild(textArea);
 }
@@ -453,19 +422,109 @@ function fallbackCopyToClipboard(text) {
 // Initialization
 // ============================================
 
-// Set default values
 sourceLanguageSelect.value = 'auto';
 targetLanguageSelect.value = 'es';
 
-// Disable output buttons initially
 copyBtn.disabled = true;
 listenBtn.disabled = true;
 clearOutputBtn.disabled = true;
-listenInputBtn.disabled = false;
+listenInputBtn.disabled = true;
 
-// Log initialization
-console.log('✅ AI Multilingual Translator Initialized!');
+console.log('✅ WorldSpeakAI Initialized!');
+
 console.log('📡 Using MyMemory API with Google Translate Fallback');
 console.log('🌐 Supported languages: 16+');
 console.log('🎤 Text-to-Speech: Enabled (Input & Output)');
 console.log('📋 Copy to Clipboard: Enabled');
+
+// ============================================
+// Voice Input (Speech-to-Text)
+// ============================================
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    voiceInputBtn.addEventListener('click', () => {
+        const sourceLang = sourceLanguageSelect.value;
+        // Map common codes to full locale for recognition
+        const recognitionLangMap = {
+            'auto': 'en-US',
+            'en': 'en-US',
+            'es': 'es-ES',
+            'fr': 'fr-FR',
+            'de': 'de-DE',
+            'it': 'it-IT',
+            'pt': 'pt-BR',
+            'ru': 'ru-RU',
+            'ja': 'ja-JP',
+            'zh': 'zh-CN',
+            'ar': 'ar-SA',
+            'hi': 'hi-IN',
+            'ko': 'ko-KR',
+            'bn': 'bn-IN',
+            'te': 'te-IN',
+            'mr': 'mr-IN',
+            'ta': 'ta-IN',
+            'gu': 'gu-IN',
+            'th': 'th-TH',
+            'tr': 'tr-TR'
+        };
+
+        recognition.lang = recognitionLangMap[sourceLang] || 'en-US';
+        
+        try {
+            recognition.start();
+            voiceInputBtn.classList.add('recording');
+            showToast('🎙️ Listening... Speak now');
+        } catch (err) {
+            recognition.stop();
+        }
+    });
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        inputTextArea.value = transcript;
+        inputCount.textContent = transcript.length;
+        listenInputBtn.disabled = false;
+        
+        showToast('✅ Voice captured!');
+        
+        // Auto-translate after a short delay
+        setTimeout(() => {
+            performTranslation(transcript, sourceLanguageSelect.value, targetLanguageSelect.value);
+        }, 500);
+    };
+
+    recognition.onspeechend = () => {
+        recognition.stop();
+        voiceInputBtn.classList.remove('recording');
+    };
+
+    recognition.onerror = (event) => {
+        voiceInputBtn.classList.remove('recording');
+        console.error('Speech recognition error:', event.error);
+        
+        let errorMsg = 'Speech error: ' + event.error;
+        
+        if (event.error === 'no-speech') {
+            errorMsg = '🎙️ No speech detected. Please try again.';
+        } else if (event.error === 'not-allowed') {
+            errorMsg = '❌ Microphone permission denied.';
+        } else if (event.error === 'network') {
+            errorMsg = '🌐 Network error during recognition.';
+        }
+        
+        showToast(errorMsg);
+    };
+
+} else {
+    voiceInputBtn.title = "Speech recognition not supported in this browser";
+    voiceInputBtn.addEventListener('click', () => {
+        showToast('❌ Voice input not supported in this browser');
+    });
+}
+

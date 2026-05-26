@@ -3,23 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Multilingual Translator - Instant Translation Service</title>
+    <title>WorldSpeakAI - Instant AI Translation Service</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+    
     <div class="container">
         <!-- Header -->
         <header>
-            <h1>🌐 AI Multilingual Translator</h1>
-            <p>Break Language Barriers with AI-Powered Translation</p>
+            <div class="logo">
+                <i class="fas fa-language"></i>
+                <h1>WorldSpeak<span>AI</span></h1>
+            </div>
+            <p>Experience seamless translation with our advanced AI engine.</p>
         </header>
 
         <!-- Main Translator -->
-        <div class="translator-wrapper">
+        <main class="translator-card">
             <!-- Language Selection -->
-            <div class="language-selector">
-                <div class="language-group">
-                    <label for="sourceLanguage">Source Language</label>
+            <div class="language-bar">
+                <div class="lang-select-wrapper">
                     <select id="sourceLanguage">
                         <option value="auto">Auto-Detect</option>
                         <option value="en">English</option>
@@ -35,13 +47,20 @@
                         <option value="hi">Hindi</option>
                         <option value="ko">Korean</option>
                         <option value="bn">Bengali</option>
+                        <option value="te">Telugu</option>
+                        <option value="mr">Marathi</option>
+                        <option value="ta">Tamil</option>
+                        <option value="gu">Gujarati</option>
                         <option value="th">Thai</option>
                         <option value="tr">Turkish</option>
                     </select>
                 </div>
 
-                <div class="language-group">
-                    <label for="targetLanguage">Target Language</label>
+                <button class="swap-languages" id="swapBtn" title="Swap Languages">
+                    <i class="fas fa-exchange-alt"></i>
+                </button>
+
+                <div class="lang-select-wrapper">
                     <select id="targetLanguage">
                         <option value="es">Spanish</option>
                         <option value="en">English</option>
@@ -56,6 +75,10 @@
                         <option value="hi">Hindi</option>
                         <option value="ko">Korean</option>
                         <option value="bn">Bengali</option>
+                        <option value="te">Telugu</option>
+                        <option value="mr">Marathi</option>
+                        <option value="ta">Tamil</option>
+                        <option value="gu">Gujarati</option>
                         <option value="th">Thai</option>
                         <option value="tr">Turkish</option>
                     </select>
@@ -63,82 +86,91 @@
             </div>
 
             <!-- Content Area -->
-            <div class="content">
+            <div class="translator-content">
                 <!-- Input Section -->
-                <div class="input-group">
-                    <div class="group-header">
-                        <h3>📝 Input Text</h3>
-                        <span class="char-count"><span id="inputCount">0</span>/5000</span>
+                <div class="text-area-group input-area">
+                    <div class="area-header">
+                        <span>Input</span>
+                        <span class="char-count"><span id="inputCount">0</span> / 5000</span>
                     </div>
                     <textarea 
                         id="inputText" 
-                        placeholder="Enter the text you want to translate here... (Max 5000 characters)"
-                        maxlength="5000">
-                    </textarea>
-                    <div class="button-group">
-                        <button class="listen-btn icon-btn tooltip" id="listenInputBtn" title="Listen to input text" disabled>
-                            🔊
-                            <span class="tooltiptext">Listen Input</span>
+                        placeholder="Type to translate..."
+                        maxlength="5000"></textarea>
+                    <div class="area-actions">
+                        <button class="action-btn" id="voiceInputBtn" title="Voice Input">
+                            <i class="fas fa-microphone"></i>
                         </button>
-                        <button class="clear-btn icon-btn" id="clearInputBtn" title="Clear input">
-                            🗑️
+                        <button class="action-btn" id="listenInputBtn" title="Listen" disabled>
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <button class="action-btn" id="clearInputBtn" title="Clear">
+                            <i class="fas fa-times"></i>
                         </button>
                     </div>
                 </div>
 
                 <!-- Output Section -->
-                <div class="output-group">
-                    <div class="group-header">
-                        <h3>✨ Translated Text</h3>
-                        <span class="char-count"><span id="outputCount">0</span>/5000</span>
+                <div class="text-area-group output-area">
+                    <div class="area-header">
+                        <span>Translation</span>
+                        <span class="char-count"><span id="outputCount">0</span> / 5000</span>
                     </div>
                     <textarea 
                         id="outputText" 
-                        placeholder="The translation will appear here..."
-                        readonly>
-                    </textarea>
-                    <div class="button-group">
-                        <button class="copy-btn icon-btn tooltip" id="copyBtn" title="Copy to clipboard" disabled>
-                            📋
-                            <span class="tooltiptext">Copy Text</span>
+                        placeholder="Translation will appear here..."
+                        readonly></textarea>
+                    <div class="area-actions">
+                        <button class="action-btn" id="listenBtn" title="Listen" disabled>
+                            <i class="fas fa-volume-up"></i>
                         </button>
-                        <button class="listen-btn icon-btn tooltip" id="listenBtn" title="Text to Speech" disabled>
-                            🔊
-                            <span class="tooltiptext">Listen Output</span>
+                        <button class="action-btn" id="copyBtn" title="Copy" disabled>
+                            <i class="fas fa-copy"></i>
                         </button>
-                        <button class="clear-btn icon-btn" id="clearOutputBtn" title="Clear output" disabled>
-                            🗑️
+                        <button class="action-btn" id="clearOutputBtn" title="Clear" disabled>
+                            <i class="fas fa-times"></i>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Status and Translate Button -->
-            <div class="controls">
-                <div id="status" class="status"></div>
-                <button class="translate-btn" id="translateBtn">🚀 Translate</button>
+            <!-- Footer Controls -->
+            <div class="translator-footer">
+                <div id="status" class="status-indicator"></div>
+                <button class="main-translate-btn" id="translateBtn">
+                    <span>Translate</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
             </div>
-        </div>
+        </main>
 
-        <!-- Features Section -->
-        <div class="features">
-            <div class="feature-card">
-                <h4>⚡ Instant Translation</h4>
-                <p>Get translations in real-time using AI-powered technology</p>
+        <!-- Features -->
+        <section class="quick-features">
+            <div class="feature-item">
+                <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                <div class="feature-text">
+                    <h4>Fast & Accurate</h4>
+                    <p>Real-time AI processing</p>
+                </div>
             </div>
-            <div class="feature-card">
-                <h4>🎯 16+ Languages</h4>
-                <p>Support for major world languages with Auto-Detect</p>
+            <div class="feature-item">
+                <div class="feature-icon"><i class="fas fa-globe"></i></div>
+                <div class="feature-text">
+                    <h4>Multi-Language</h4>
+                    <p>16+ major languages</p>
+                </div>
             </div>
-            <div class="feature-card">
-                <h4>🎤 Text-to-Speech</h4>
-                <p>Listen to input and translated text in native pronunciation</p>
+            <div class="feature-item">
+                <div class="feature-icon"><i class="fas fa-microphone"></i></div>
+                <div class="feature-text">
+                    <h4>Voice Support</h4>
+                    <p>Text-to-speech engine</p>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Footer -->
         <footer>
-            <p>&copy; 2026 AI Multilingual Translator. Made with ❤️ for language learners worldwide.</p>
+            <p>&copy; 2026 LinguoAI. All rights reserved.</p>
         </footer>
     </div>
 
